@@ -112,7 +112,7 @@ class DMDWidget(QWidget):
             )
         )
         self.register_cc_button.clicked.connect(
-            lambda: self.register(
+            lambda: self.register_cc(
                 self.transform_for_laser_menu.selectedItems()[0].text(),
                 self.transform_for_mask_menu.selectedItems()[0].text()
             )
