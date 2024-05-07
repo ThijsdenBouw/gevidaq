@@ -12,6 +12,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy import unravel_index
 import scipy.optimize
 import scipy.signal
 import skimage.exposure
@@ -460,3 +461,43 @@ if __name__ == "__main__":
         axs[3].imshow(image_org)
         axs[3].scatter(coordinate[0], coordinate[1], color="r", linewidths=5)
         axs[3].set_axis_off()
+
+
+def touchingCoordinateFinder_cc(image, size):
+    # DMD: 1024 x 768 pixels
+    # Camera: 2048 x 2048 pixels
+
+    # Perpare mask
+    # Assumption/approximation is made that full width DMD covers full width camera
+    # Therefore mask covers about twice as many pixels on the camera image
+    mask = Registrator.DMDRegistator.create_registration_image_touching_squares(size, size, size)[:2*size][:2*size]
+    
+    # Do cross correlation
+    corr = scipy.signal.correlate(image, mask, method='fft')
+
+    # Find coordinates of best correlation
+    # and make the tuple an array
+    coordinates = np.asarray(np.unravel_index(corr.argmax(), corr.shape))
+    # Adjust to make coordinates center of the squares
+    coordinates -= size
+
+    return coordinates
+
+def circleCoordinateFinder_cc(image, size):
+    # DMD: 1024 x 768 pixels
+    # Camera: 2048 x 2048 pixels
+
+    # Perpare mask
+    # Assumption/approximation is made that full width DMD covers full width camera
+    # Therefore mask covers about twice as many pixels on the camera image
+    mask = Registrator.DMDRegistator.create_registration_image_circle(size, size, size)[:2*size, :2*size]
+
+    # Do cross correlation
+    corr = scipy.signal.correlate(image, mask, method='fft')
+
+    # Find coordinate of best correlation
+    coordinates = np.asarray(np.unravel_index(corr.argmax(), corr.shape))
+    # Adjust to make coordinates center of the circle
+    coordinates -= size
+
+    return coordinates

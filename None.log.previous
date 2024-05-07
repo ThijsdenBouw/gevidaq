@@ -1,0 +1,7 @@
+2024-04-24 21:54:00,566:CRITICAL:root:uncaught exception!
+Traceback (most recent call last):
+  File "c:\Users\Thijs\Documents\GitHub\gevidaq\gevidaq\__main__.py", line 45, in <module>
+    run()
+  File "c:\Users\Thijs\Documents\GitHub\gevidaq\gevidaq\__main__.py", line 39, in run
+    from . import Fiumicino  # TODO fix modules misbehaving on import
+ImportError: attempted relative import with no known parent package

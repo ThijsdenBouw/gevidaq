@@ -76,7 +76,8 @@ class DMDWidget(QWidget):
         self.connect_button.setStyleSheet(
             "QPushButton {background-color: #A3C1DA;}"
         )
-        self.register_button = QPushButton("Register")
+        self.register_button = QPushButton("Old register")
+        self.register_cc_button = QPushButton("New register")
 
         lasers = ["640", "532", "488"]
         self.transform_for_laser_menu = QListWidget()
@@ -84,6 +85,14 @@ class DMDWidget(QWidget):
         self.transform_for_laser_menu.setFixedHeight(52)
         self.transform_for_laser_menu.setFixedWidth(82)
         self.transform_for_laser_menu.setCurrentRow(0)
+
+        masks = ["squares", "circle"]
+        self.transform_for_mask_menu = QListWidget()
+        self.transform_for_mask_menu.addItems(masks)
+        self.transform_for_mask_menu.setFixedHeight(52)
+        self.transform_for_mask_menu.setFixedWidth(82)
+        self.transform_for_mask_menu.setCurrentRow(0)
+
         self.project_button = QPushButton("Start projecting")
         self.project_button.setStyleSheet(
             "QPushButton {background-color: #99FFCC;}"
@@ -98,7 +107,14 @@ class DMDWidget(QWidget):
         self.connect_button.clicked.connect(self.connect)
         self.register_button.clicked.connect(
             lambda: self.register(
-                self.transform_for_laser_menu.selectedItems()[0].text()
+                self.transform_for_laser_menu.selectedItems()[0].text(),
+                self.transform_for_mask_menu.selectedItems()[0].text()
+            )
+        )
+        self.register_cc_button.clicked.connect(
+            lambda: self.register(
+                self.transform_for_laser_menu.selectedItems()[0].text(),
+                self.transform_for_mask_menu.selectedItems()[0].text()
             )
         )
         self.project_button.clicked.connect(self.project)
@@ -227,8 +243,10 @@ class DMDWidget(QWidget):
 
         box_layout.addWidget(self.connect_button, 0, 0)
         box_layout.addWidget(self.register_button, 0, 1)
+        box_layout.addWidget(self.register_cc_button, 0, 2)
         box_layout.addWidget(QLabel("Register with laser:"), 1, 1)
         box_layout.addWidget(self.transform_for_laser_menu, 2, 1, 2, 1)
+        box_layout.addWidget(self.transform_for_mask_menu, 2, 2, 2, 2)
         box_layout.addWidget(self.project_button, 2, 0)
         box_layout.addWidget(self.clear_button, 3, 0)
         box_layout.addWidget(self.white_project_button, 1, 0)
@@ -268,12 +286,22 @@ class DMDWidget(QWidget):
 
         self.Illumination_time_textbox.setText(str(illumination_time))
 
-    def register(self, laser):
+    def register(self, laser, mask="circle"):
         self.sig_start_registration.emit()
         # Add control for lasers, signal slot should be there in AOTF widget
         registrator = Registrator.DMDRegistator(self.DMD_actuator)
         self.transform[laser] = registrator.registration(
-            registration_pattern="circle"
+            registration_pattern=mask
+        )
+        self.save_transformation()        
+        self.sig_finished_registration.emit()
+
+    def register_cc(self, laser, mask="squares"):
+        self.sig_start_registration.emit()
+        # Add control for lasers, signal slot should be there in AOTF widget
+        registrator = Registrator.DMDRegistator(self.DMD_actuator)
+        self.transform[laser] = registrator.registration_cc(
+            registration_pattern=mask
         )
         self.save_transformation()
         self.sig_finished_registration.emit()
