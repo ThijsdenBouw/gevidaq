@@ -37,6 +37,7 @@ from skimage.color import rgb2gray
 
 from ..ImageAnalysis.ImageProcessing import ProcessImage
 from ..StylishQT import roundQGroupBox
+from gevidaq.NIDAQ import AOTFWidget
 from . import CoordinateTransformations, DMDActuator, Registration, Registrator
 
 
@@ -299,13 +300,20 @@ class DMDWidget(QWidget):
 
     def register_cc(self, laser, mask="squares"):
         self.sig_start_registration.emit()
-        # Add control for lasers, signal slot should be there in AOTF widget
+        # Attempt to add AOTF control in registration process
+        AOTFWidget.AOTFLaserUI.reset_sliders()
+        AOTFWidget.AOTFLaserUI.wavelength = f"{laser}"
+        AOTFWidget.AOTFLaserUI.setChannelValue(500)
+
         registrator = Registrator.DMDRegistator(self.DMD_actuator)
         self.transform[laser] = registrator.registration_cc(
             laser=laser,
             registration_pattern=mask
         )
         self.save_transformation()
+
+        AOTFWidget.AOTFLaserUI.setChannelValue(0)
+        AOTFWidget.AOTFLaserUI.reset_sliders()
         self.sig_finished_registration.emit()
 
     def check_mask_format_valid(self, mask):
