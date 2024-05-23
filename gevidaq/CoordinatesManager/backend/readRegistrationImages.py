@@ -99,6 +99,7 @@ def touching_squares(x, y, x0, y0, sigmax, sigmay):
     x0, y0: coordinates of the point where the squares touch
     sigma: size of the squares
     """
+    
     x1 = int(x0 - sigmax)
     x2 = int(x0 - 1)
     x3 = int(x0 + sigmax - 1)
@@ -117,7 +118,7 @@ def touching_squares(x, y, x0, y0, sigmax, sigmay):
     return mask
 
 
-def circle(x, y, x0, y0, sigma):
+def circle(x, y, x0, y0, sigmax, sigmay):
     """
     Function that returns a raveled binary array containing a circle.
 
@@ -126,11 +127,11 @@ def circle(x, y, x0, y0, sigma):
     sigma: size of the circle
     """
 
-    x = int(2.5 * sigma)
-    y = int(2.5 * sigma)
+    x = int(2.5 * sigmax)
+    y = int(2.5 * sigmay)
 
     mask = np.zeros((x, y))
-    mask[skimage.draw.circle(x0, y0, sigma)] = 1
+    mask[skimage.draw.ellipse(x0, y0, sigmax, sigmay)] = 1
 
     mask = mask.ravel()
     return mask
@@ -261,7 +262,7 @@ def findCircleCenterCoordinate_curvefit(image):
         [h_mask_width, h_mask_height, 0.4 * mask_width, 0.4 * mask_height]
     )
     popt, pcov = scipy.optimize.curve_fit(
-        _touching_squares, x, img_selection.ravel(), p0
+        _circle, x, img_selection.ravel(), p0
     )
 
     coordinates = np.flip(

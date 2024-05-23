@@ -291,6 +291,7 @@ class DMDWidget(QWidget):
         # Add control for lasers, signal slot should be there in AOTF widget
         registrator = Registrator.DMDRegistator(self.DMD_actuator)
         self.transform[laser] = registrator.registration(
+            laser=laser,
             registration_pattern=mask
         )
         self.save_transformation()        
@@ -301,6 +302,7 @@ class DMDWidget(QWidget):
         # Add control for lasers, signal slot should be there in AOTF widget
         registrator = Registrator.DMDRegistator(self.DMD_actuator)
         self.transform[laser] = registrator.registration_cc(
+            laser=laser,
             registration_pattern=mask
         )
         self.save_transformation()

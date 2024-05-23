@@ -111,6 +111,7 @@ class DMDRegistator:
         grid_points_y=3,
         registration_pattern="circle",
     ):
+        logging.info(registration_pattern)
         x_coords = np.linspace(0, 768, grid_points_x + 2)[1:-1]
         y_coords = np.linspace(0, 1024, grid_points_y + 2)[1:-1]
 
@@ -150,8 +151,8 @@ class DMDRegistator:
             # )
             camera_coordinates[
                 i, :
-            ] = readRegistrationImages.touchingCoordinateFinder(
-                image, method="curvefit"
+            ] = readRegistrationImages.circleCoordinateFinder(
+                image
             )
 
             self.DMD.stop_projection()
@@ -201,13 +202,16 @@ class DMDRegistator:
         return array
     
     def save_coordinates(coordinates, t, preparation_mask, laser, method):
+        
+        logging.info(str(preparation_mask))
+        
         if method == "cc":
-            path = r"./backend/CoordinateValues/" + preparation_mask + "/dmd_coordinates_cc" + str(laser) + ".txt"
+            path = r"C:/Labsoftware/gevidaq/gevidaq/CoordinatesManager/backend/CoordinateValues/" + str(preparation_mask)+  "/dmd_coordinates_" + str(method)+ str(laser) + ".txt"
         elif method == "otsu":
-            path = r"./backend/CoordinateValues/" + preparation_mask + "/dmd_coordinates" + str(laser) + ".txt"
+            path = r"C:/Labsoftware/gevidaq/gevidaq/CoordinatesManager/backend/CoordinateValues/" + str(preparation_mask)+  "/dmd_coordinates_" + str(laser) + ".txt"
         
         with open(path, "a") as myfile:
-            myfile.write(coordinates + ", "+ str(t) + ".\n")
+            myfile.write(str(coordinates) + ", "+ str(t) + ".\n")
             myfile.close()
 
     # Registration function for the cross-correlation method
@@ -216,9 +220,10 @@ class DMDRegistator:
         grid_points_x=2,
         grid_points_y=3,
         registration_pattern="squares",):
+        
 
-        x_coords = np.linspace(0, 768, grid_points_x + 2)[1:-1]
-        y_coords = np.linspace(0, 1024, grid_points_y + 2)[1:-1]
+        x_coords = np.linspace(0, 768, grid_points_x + 4)[2:-2]
+        y_coords = np.linspace(0, 1024, grid_points_y + 4)[2:-2]
 
         x_mesh, y_mesh = np.meshgrid(x_coords, y_coords)
 
@@ -266,17 +271,18 @@ class DMDRegistator:
                 self.DMD.start_projection()
 
                 image = self.cam.SnapImage(0.01)
-                plt.imsave(
-                    os.getcwd()  # TODO fix path
-                    + "/CoordinatesManager/Registration_Images/circles/image_"
-                    + str(i)
-                    + ".png",
-                    image,
-                )
+                # plt.imsave(
+                #     os.getcwd()  # TODO fix path
+                #     + "/CoordinatesManager/Registration_Images/circles/image_"
+                #     + str(i)
+                #     + ".png",
+                #     image,
+                # )
                 camera_coordinates[
                     i, :
                 ] = readRegistrationImages.circleCoordinateFinder_cc(
-                    image
+                    image,
+                    size=mask_size
                 )
 
             self.DMD.stop_projection()
