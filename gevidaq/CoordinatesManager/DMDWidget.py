@@ -37,7 +37,7 @@ from skimage.color import rgb2gray
 
 from ..ImageAnalysis.ImageProcessing import ProcessImage
 from ..StylishQT import roundQGroupBox
-from gevidaq.NIDAQ import AOTFWidget
+from ..NIDAQ import AOTFWidget
 from . import CoordinateTransformations, DMDActuator, Registration, Registrator
 
 
@@ -45,6 +45,7 @@ class DMDWidget(QWidget):
     sig_request_mask_coordinates = pyqtSignal()
     sig_start_registration = pyqtSignal()
     sig_finished_registration = pyqtSignal()
+    sig_lasers_status_changed = pyqtSignal(dict)
 
     def __init__(self, parent=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -73,8 +74,12 @@ class DMDWidget(QWidget):
 
         self.setLayout(layout)
 
-        self.connect_button = QPushButton("Connect")
-        self.connect_button.setStyleSheet(
+        self.connect_DMD_button = QPushButton("Connect DMD")
+        self.connect_DMD_button.setStyleSheet(
+            "QPushButton {background-color: #A3C1DA;}"
+        )
+        self.connect_AOTF_button = QPushButton("Connect AOTF")
+        self.connect_AOTF_button.setStyleSheet(
             "QPushButton {background-color: #A3C1DA;}"
         )
         self.register_button = QPushButton("Old register")
@@ -105,7 +110,8 @@ class DMDWidget(QWidget):
         )
         self.load_mask_container_stack = QStackedWidget()
 
-        self.connect_button.clicked.connect(self.connect)
+        self.connect_DMD_button.clicked.connect(self.connect_DMD)
+        self.connect_AOTF_button.clicked.connect(self.connect_AOTF)
         self.register_button.clicked.connect(
             lambda: self.register(
                 self.transform_for_laser_menu.selectedItems()[0].text(),
@@ -242,10 +248,10 @@ class DMDWidget(QWidget):
         settings_container_layout.addWidget(QLabel("Repeat sequence:"), 6, 0)
         settings_container_layout.addWidget(self.repeat_imgseq_button, 6, 1)
 
-        box_layout.addWidget(self.connect_button, 0, 0)
+        box_layout.addWidget(self.connect_DMD_button, 0, 0)
         box_layout.addWidget(self.register_button, 0, 1)
         box_layout.addWidget(self.register_cc_button, 0, 2)
-        box_layout.addWidget(QLabel("Register with laser:"), 1, 1)
+        box_layout.addWidget(self.connect_AOTF_button, 1, 1)
         box_layout.addWidget(self.transform_for_laser_menu, 2, 1, 2, 1)
         box_layout.addWidget(self.transform_for_mask_menu, 2, 2, 2, 2)
         box_layout.addWidget(self.project_button, 2, 0)
@@ -260,15 +266,46 @@ class DMDWidget(QWidget):
         self.open_latest_transformation()
 
     # %%
-    def connect(self):
-        if self.connect_button.text() == "Connect":
+    def connect_DMD(self):
+        if self.connect_DMD_button.text() == "Connect DMD":
             self.DMD_actuator = DMDActuator.DMDActuator()
-            self.connect_button.setText("Disconnect")
+            self.connect_DMD_button.setText("Disconnect DMD")
 
         else:
             self.DMD_actuator.disconnect_DMD()
             del self.DMD_actuator
-            self.connect_button.setText("Connect")
+            self.connect_DMD_button.setText("Connect DMD")
+    
+    def connect_AOTF(self):
+        if self.connect_AOTF_button.text() == "Connect AOTF":
+            self.AOTFlaserUI = AOTFWidget.AOTFLaserUI()
+            self.connect_AOTF_button.setText("Disconnect AOTF")
+
+        else:
+            self.AOTFlaserUI.disconnect_signals()
+            del self.AOTFlaserUI
+            self.connect_AOTF_button.setText("Connect AOTF")
+
+    def AOTF_setup(self, laser):
+        self.lasers_status = {
+            wavelength: [False, 0] for wavelength in ("488", "532", "640")
+        }
+
+        if laser == "640":
+            color = ("red", "indian red", "#DEC8C4")
+        elif laser == "532":
+            color = ("green", "lime green", "#CDDEC4")
+        elif laser == "488":
+            color = ("blue", "corn flower blue", "#C4DDDE")
+
+        self.AOTFlaserUI(laser,
+                         color,
+                         self.sig_lasers_status_changed,
+                         self.lasers_status,)
+        
+        self.AOTFlaserUI.reset_sliders()
+        self.AOTFlaserUI.setChannelValue(500)
+
 
     def calculate_illumination_time_for_frequency(self):
         # In theroy resting time between frames can be 0 us.
@@ -288,7 +325,7 @@ class DMDWidget(QWidget):
         self.Illumination_time_textbox.setText(str(illumination_time))
 
     def register(self, laser, mask="circle"):
-        self.sig_start_registration.emit()
+        self.sig_start_registration.emit(self.AOTF_setup(laser))
         # Add control for lasers, signal slot should be there in AOTF widget
         registrator = Registrator.DMDRegistator(self.DMD_actuator)
         self.transform[laser] = registrator.registration(
@@ -299,21 +336,14 @@ class DMDWidget(QWidget):
         self.sig_finished_registration.emit()
 
     def register_cc(self, laser, mask="squares"):
-        self.sig_start_registration.emit()
+        self.sig_start_registration.emit(self.AOTF_setup(laser))
         # Attempt to add AOTF control in registration process
-        AOTFWidget.AOTFLaserUI.reset_sliders()
-        AOTFWidget.AOTFLaserUI.wavelength = f"{laser}"
-        AOTFWidget.AOTFLaserUI.setChannelValue(500)
-
         registrator = Registrator.DMDRegistator(self.DMD_actuator)
         self.transform[laser] = registrator.registration_cc(
             laser=laser,
             registration_pattern=mask
         )
         self.save_transformation()
-
-        AOTFWidget.AOTFLaserUI.setChannelValue(0)
-        AOTFWidget.AOTFLaserUI.reset_sliders()
         self.sig_finished_registration.emit()
 
     def check_mask_format_valid(self, mask):
