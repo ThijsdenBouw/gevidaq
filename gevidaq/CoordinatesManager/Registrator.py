@@ -128,6 +128,20 @@ class DMDRegistator:
         for i in range(dmd_coordinates.shape[0]):
             x = int(dmd_coordinates[i, 0])
             y = int(dmd_coordinates[i, 1])
+            
+            # Mask size is an arbitrary number, 
+            # it's a size that's neither too small nor too big for the DMD
+            mask_size = 75
+            if i == 0:
+                x0 = 500
+                y0 = 500
+                
+                mask = DMDRegistator.create_registration_image_touching_squares(x0, y0, mask_size/2)
+                
+                self.DMD.send_data_to_DMD(mask)
+                self.DMD.start_projection()
+                
+                time.sleep(2)
 
             if registration_pattern == "squares":
                 mask = (
@@ -135,8 +149,43 @@ class DMDRegistator:
                         x, y
                     )
                 )
+                
+                self.DMD.send_data_to_DMD(mask)
+                self.DMD.start_projection()
+    
+                image = self.cam.SnapImage(0.01)
+                # plt.imsave(
+                #     os.getcwd()  # TODO fix path
+                #     + "/CoordinatesManager/Registration_Images/TouchingSquares/image_"
+                #     + str(i)
+                #     + ".png",
+                #     image,
+                # )
+                camera_coordinates[
+                    i, :
+                ] = readRegistrationImages.touchingCoordinateFinder(
+                    image
+                )
+                
             else:
                 mask = DMDRegistator.create_registration_image_circle(x, y)
+                
+                self.DMD.send_data_to_DMD(mask)
+                self.DMD.start_projection()
+    
+                image = self.cam.SnapImage(0.01)
+                # plt.imsave(
+                #     os.getcwd()  # TODO fix path
+                #     + "/CoordinatesManager/Registration_Images/TouchingSquares/image_"
+                #     + str(i)
+                #     + ".png",
+                #     image,
+                # )
+                camera_coordinates[
+                    i, :
+                ] = readRegistrationImages.circleCoordinateFinder(
+                    image
+                )
 
             self.DMD.send_data_to_DMD(mask)
             self.DMD.start_projection()
@@ -211,7 +260,7 @@ class DMDRegistator:
             path = r"C:/Labsoftware/gevidaq/gevidaq/CoordinatesManager/backend/CoordinateValues/" + str(preparation_mask)+  "/dmd_coordinates_" + str(laser) + ".txt"
         
         with open(path, "a") as myfile:
-            myfile.write(str(coordinates) + ", "+ str(t) + ".\n")
+            myfile.write(str(coordinates) + ", "+ str(t) + ":\n")
             myfile.close()
 
     # Registration function for the cross-correlation method
@@ -222,8 +271,8 @@ class DMDRegistator:
         registration_pattern="squares",):
         
 
-        x_coords = np.linspace(0, 768, grid_points_x + 4)[2:-2]
-        y_coords = np.linspace(0, 1024, grid_points_y + 4)[2:-2]
+        x_coords = np.linspace(0, 768, grid_points_x + 2)[1:-1]
+        y_coords = np.linspace(0, 1024, grid_points_y + 2)[1:-1]
 
         x_mesh, y_mesh = np.meshgrid(x_coords, y_coords)
 
@@ -242,22 +291,33 @@ class DMDRegistator:
             # Mask size is an arbitrary number, 
             # it's a size that's neither too small nor too big for the DMD
             mask_size = 75
-
+            if i == 0:
+                x0 = 500
+                y0 = 500
+                
+                mask = DMDRegistator.create_registration_image_touching_squares(x0, y0, mask_size/2)
+                
+                self.DMD.send_data_to_DMD(mask)
+                self.DMD.start_projection()
+                
+                time.sleep(2)
+            
+                
+                
             if registration_pattern == "squares":
                 mask = DMDRegistator.create_registration_image_touching_squares(x, y, mask_size/2)
                 
                 self.DMD.send_data_to_DMD(mask)
                 self.DMD.start_projection()
-
+                
                 image = self.cam.SnapImage(0.01)
 
-                # plt.imsave(
-                #     os.getcwd()  # TODO fix path
-                #     + "/CoordinatesManager/Registration_Images/squares/image_"
-                #     + str(i)
-                #     + ".png",
-                #     image,
-                # )
+                #plt.imsave(
+                #    r"C:/Labsoftware/gevidaq/gevidaq/CoordinatesManager/backend/CoordinateValues/image_"
+                #    + str(i)
+                #   + ".png",
+                #   image,
+                #)
                 camera_coordinates[
                     i, :
                 ] = readRegistrationImages.touchingCoordinateFinder_cc(
@@ -271,13 +331,12 @@ class DMDRegistator:
                 self.DMD.start_projection()
 
                 image = self.cam.SnapImage(0.01)
-                # plt.imsave(
-                #     os.getcwd()  # TODO fix path
-                #     + "/CoordinatesManager/Registration_Images/circles/image_"
-                #     + str(i)
-                #     + ".png",
-                #     image,
-                # )
+                #plt.imsave(
+                #    r"C:/Labsoftware/gevidaq/gevidaq/CoordinatesManager/backend/CoordinateValues/image_"
+                #    + str(i)
+                #    + ".png",
+                #   image,
+                #)
                 camera_coordinates[
                     i, :
                 ] = readRegistrationImages.circleCoordinateFinder_cc(
@@ -290,7 +349,7 @@ class DMDRegistator:
         t2 = time.time()
         t = t2 - t1
         DMDRegistator.save_coordinates(camera_coordinates, t, registration_pattern, laser, "cc")
-
+        
         logging.info("DMD coordinates, CC method:")
         logging.info(dmd_coordinates)
         logging.info("Found camera coordinates, CC method:")
