@@ -502,3 +502,24 @@ def circleCoordinateFinder_cc(image, size):
     coordinates -= size
     coordinates = np.flip(coordinates)
     return coordinates
+
+def crossCoordinateFinder_cc(image, x, y):
+    # DMD: 1024 x 768 pixels
+    # Camera: 2048 x 2048 pixels
+
+    # Perpare mask
+    # Assumption/approximation is made that full width DMD covers full width camera
+    # Therefore mask covers about twice as many pixels on the camera image
+    mask = Registrator.DMDRegistator.create_registration_image_cross(x, y)
+    
+    # Do cross correlation
+    corr = scipy.signal.correlate(image, mask, method='fft')
+
+    # Find coordinates of best correlation
+    # and make the tuple an array
+    coordinates = np.asarray(np.unravel_index(corr.argmax(), corr.shape))
+    # Adjust to make coordinates center of the squares
+    coordinates = np.flip(coordinates)
+    coordinates[0] -= 1024 / 2
+    coordinates[1] -= 768 / 2
+    return coordinates

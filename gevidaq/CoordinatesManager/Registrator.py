@@ -111,6 +111,8 @@ class DMDRegistator:
         grid_points_y=3,
         registration_pattern="circle",
     ):
+        if registration_pattern == "cross":
+            registration_pattern = "circle"
         logging.info(registration_pattern)
         x_coords = np.linspace(0, 768, grid_points_x + 2)[1:-1]
         y_coords = np.linspace(0, 1024, grid_points_y + 2)[1:-1]
@@ -250,6 +252,19 @@ class DMDRegistator:
         array[circle] = 1
         return array
     
+    def create_registration_image_cross(x, y):
+        # DMD: 1024 x 768 pixels
+        array = np.zeros((768, 1024))
+        x_grid, y_grid = np.mgrid[0:768, 0:1024]
+
+        square1 = ((x_grid >= x - 1) & (x_grid < x + 1))
+        square2 = ((y_grid >= y - 1) & (y_grid < y + 1))  
+
+        array[square1] = 1
+        array[square2] = 1
+
+        return array
+
     def save_coordinates(coordinates, t, preparation_mask, laser, method):
         
         logging.info(str(preparation_mask))
@@ -291,6 +306,8 @@ class DMDRegistator:
             # Mask size is an arbitrary number, 
             # it's a size that's neither too small nor too big for the DMD
             mask_size = 75
+
+            # Set up needs time to start up
             if i == 0:
                 x0 = 500
                 y0 = 500
@@ -301,8 +318,6 @@ class DMDRegistator:
                 self.DMD.start_projection()
                 
                 time.sleep(2)
-            
-                
                 
             if registration_pattern == "squares":
                 mask = DMDRegistator.create_registration_image_touching_squares(x, y, mask_size/2)
@@ -342,6 +357,27 @@ class DMDRegistator:
                 ] = readRegistrationImages.circleCoordinateFinder_cc(
                     image,
                     size=mask_size
+                )
+
+            elif registration_pattern == "cross":
+                mask = DMDRegistator.create_registration_image_cross(x, y)
+            
+                self.DMD.send_data_to_DMD(mask)
+                self.DMD.start_projection()
+
+                image = self.cam.SnapImage(0.01)
+                plt.imsave(
+                    r"C:/Labsoftware/gevidaq/gevidaq/CoordinatesManager/backend/CoordinateValues/image_"
+                    + str(i)
+                    + ".png",
+                   image,
+                )
+                camera_coordinates[
+                    i, :
+                ] = readRegistrationImages.crossCoordinateFinder_cc(
+                    image,
+                    x,
+                    y,
                 )
 
             self.DMD.stop_projection()

@@ -86,7 +86,7 @@ class DMDWidget(QWidget):
         self.transform_for_laser_menu.setFixedWidth(82)
         self.transform_for_laser_menu.setCurrentRow(0)
 
-        masks = ["squares", "circle"]
+        masks = ["squares", "circle", "cross"]
         self.transform_for_mask_menu = QListWidget()
         self.transform_for_mask_menu.addItems(masks)
         self.transform_for_mask_menu.setFixedHeight(52)
