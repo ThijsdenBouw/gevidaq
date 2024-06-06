@@ -471,7 +471,7 @@ def touchingCoordinateFinder_cc(image, size):
     # Perpare mask
     # Assumption/approximation is made that full width DMD covers full width camera
     # Therefore mask covers about twice as many pixels on the camera image
-    mask = Registrator.DMDRegistator.create_registration_image_touching_squares(size, size, size)[:2*size][:2*size]
+    mask = Registrator.DMDRegistator.create_registration_image_touching_squares(size, size, size)[:2*size, :2*size]
     
     # Do cross correlation
     corr = scipy.signal.correlate(image, mask, method='fft')
@@ -481,7 +481,7 @@ def touchingCoordinateFinder_cc(image, size):
     coordinates = np.asarray(np.unravel_index(corr.argmax(), corr.shape))
     # Adjust to make coordinates center of the squares
     coordinates -= size
-
+    coordinates = np.flip(coordinates)
     return coordinates
 
 def circleCoordinateFinder_cc(image, size):
@@ -500,5 +500,5 @@ def circleCoordinateFinder_cc(image, size):
     coordinates = np.asarray(np.unravel_index(corr.argmax(), corr.shape))
     # Adjust to make coordinates center of the circle
     coordinates -= size
-
+    coordinates = np.flip(coordinates)
     return coordinates
