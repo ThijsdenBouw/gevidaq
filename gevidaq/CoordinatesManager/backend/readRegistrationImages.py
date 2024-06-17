@@ -514,12 +514,19 @@ def crossCoordinateFinder_cc(image, x, y):
     
     # Do cross correlation
     corr = scipy.signal.correlate(image, mask, method='fft')
+    
+    #plt.imsave(
+    #    r"C:/Labsoftware/gevidaq/gevidaq/CoordinatesManager/backend/CoordinateValues/image_"
+    #    + str(x) + "_" + str(y)
+    #    + ".png",
+    #   corr,
+    #)
 
     # Find coordinates of best correlation
     # and make the tuple an array
     coordinates = np.asarray(np.unravel_index(corr.argmax(), corr.shape))
     # Adjust to make coordinates center of the squares
     coordinates = np.flip(coordinates)
-    coordinates[0] -= 1024 / 2
-    coordinates[1] -= 768 / 2
+    coordinates[0] -= 1024 - y
+    coordinates[1] -= 768 - x
     return coordinates

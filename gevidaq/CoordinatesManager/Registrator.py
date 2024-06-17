@@ -257,11 +257,15 @@ class DMDRegistator:
         array = np.zeros((768, 1024))
         x_grid, y_grid = np.mgrid[0:768, 0:1024]
 
-        square1 = ((x_grid >= x - 1) & (x_grid < x + 1))
-        square2 = ((y_grid >= y - 1) & (y_grid < y + 1))  
-
+        square1 = ((x_grid >= x - 1) & (x_grid < x + 2))
+        square2 = ((y_grid >= y - 1) & (y_grid < y + 2))  
+        square3 = ((x_grid >= x)     & (x_grid < x + 30) & (y_grid >= y)      & (y_grid < y + 30))
+        square4 = ((y_grid >= y - 30) & (y_grid < y)     & (x_grid >= x - 30) & (x_grid < x))  
+ 
         array[square1] = 1
         array[square2] = 1
+        array[square3] = 1
+        array[square4] = 1
 
         return array
 
