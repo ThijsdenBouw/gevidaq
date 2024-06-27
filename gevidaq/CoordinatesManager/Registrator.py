@@ -282,6 +282,10 @@ class DMDRegistator:
             myfile.write(str(coordinates) + ", "+ str(t) + ":\n")
             myfile.close()
 
+   
+    # KEEP IN MIND: The function below uses the resolution of the camera and DMD
+    # This is hardcoded, so when changed this function should be revisited
+
     # Registration function for the cross-correlation method
     def registration_cc(self,
         laser="640",
@@ -337,6 +341,9 @@ class DMDRegistator:
                 #   + ".png",
                 #   image,
                 #)
+
+                # KEEP IN MIND: The function below uses the resolution of the camera and DMD
+                # This is hardcoded, so when changed this function should be revisited
                 camera_coordinates[
                     i, :
                 ] = readRegistrationImages.touchingCoordinateFinder_cc(
@@ -356,6 +363,9 @@ class DMDRegistator:
                 #    + ".png",
                 #   image,
                 #)
+
+                # KEEP IN MIND: The function below uses the resolution of the camera and DMD
+                # This is hardcoded, so when changed this function should be revisited
                 camera_coordinates[
                     i, :
                 ] = readRegistrationImages.circleCoordinateFinder_cc(
@@ -370,12 +380,15 @@ class DMDRegistator:
                 self.DMD.start_projection()
 
                 image = self.cam.SnapImage(0.01)
-                plt.imsave(
-                    r"C:/Labsoftware/gevidaq/gevidaq/CoordinatesManager/backend/CoordinateValues/image_"
-                    + str(i)
-                    + ".png",
-                   image,
-                )
+                # plt.imsave(
+                #     r"C:/Labsoftware/gevidaq/gevidaq/CoordinatesManager/backend/CoordinateValues/image_"
+                #     + str(i)
+                #     + ".png",
+                #    image,
+                # )
+
+                # KEEP IN MIND: The function below uses the resolution of the camera and DMD
+                # This is hardcoded, so when changed this function should be revisited
                 camera_coordinates[
                     i, :
                 ] = readRegistrationImages.crossCoordinateFinder_cc(

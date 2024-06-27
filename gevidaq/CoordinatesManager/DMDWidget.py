@@ -301,6 +301,9 @@ class DMDWidget(QWidget):
         self.sig_start_registration.emit()
         # Add control for lasers, signal slot should be there in AOTF widget
         registrator = Registrator.DMDRegistator(self.DMD_actuator)
+        
+        # KEEP IN MIND: The function below uses the resolution of the camera and DMD
+        # This is hardcoded, so when changed this function should be revisited
         self.transform[laser] = registrator.registration_cc(
             laser=laser,
             registration_pattern=mask
@@ -605,3 +608,5 @@ if __name__ == "__main__":
         app.exec_()
 
     run_app()
+
+# %%
